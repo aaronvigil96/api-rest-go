@@ -1,11 +1,17 @@
 package middleware
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 	"prueba/internal/auth"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
+
+type contextKey string
+
+const roleKey contextKey = "role"
 
 func JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -16,16 +22,36 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		parts := strings.Split(authHeader, " ")
 
-		token, err := auth.VerifyToken(tokenString)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			http.Error(w, "Invalid authorization header", http.StatusUnauthorized)
+			return
+		}
+
+		token, err := auth.VerifyToken(parts[1])
 
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
-		fmt.Println("Jwt valid:", token)
-		next.ServeHTTP(w, r)
+		claims, ok := token.Claims.(jwt.MapClaims)
+
+		if !ok {
+			http.Error(w, "Invalid claims", http.StatusUnauthorized)
+			return
+		}
+
+		role, ok := claims["role"].(string)
+
+		if !ok {
+			http.Error(w, "Invalid role", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), roleKey, role)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

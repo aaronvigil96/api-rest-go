@@ -17,17 +17,29 @@ func SetupRoutes(productController *product.ProductController, authController *a
 
 	mux.Handle(
 		"POST /products",
-		middleware.JWTMiddleware(http.HandlerFunc(productController.CreateProduct)),
+		middleware.JWTMiddleware(
+			middleware.RequireRole("admin")(
+				http.HandlerFunc(productController.CreateProduct),
+			),
+		),
 	)
 
 	mux.Handle(
 		"PATCH /products/{id}",
-		middleware.JWTMiddleware(http.HandlerFunc(productController.UpdateProduct)),
+		middleware.JWTMiddleware(
+			middleware.RequireRole("admin")(
+				http.HandlerFunc(productController.CreateProduct),
+			),
+		),
 	)
 
 	mux.Handle(
 		"DELETE /products/{id}",
-		middleware.JWTMiddleware(http.HandlerFunc(productController.DeleteProduct)),
+		middleware.JWTMiddleware(
+			middleware.RequireRole("admin")(
+				http.HandlerFunc(productController.DeleteProduct),
+			),
+		),
 	)
 
 	mux.HandleFunc("POST /auth/register", authController.Register)
