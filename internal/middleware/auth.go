@@ -4,14 +4,11 @@ import (
 	"context"
 	"net/http"
 	"prueba/internal/auth"
+	"prueba/internal/requestcontext"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-type contextKey string
-
-const roleKey contextKey = "role"
 
 func JWTMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +47,15 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), roleKey, role)
+		userID, ok := claims["user_id"].(float64)
+
+		if !ok {
+			http.Error(w, "Invalid user ID", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := requestcontext.WithUserID(r.Context(), int(userID))
+		ctx = context.WithValue(ctx, requestcontext.RoleKey, role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

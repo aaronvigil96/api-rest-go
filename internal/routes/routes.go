@@ -45,6 +45,15 @@ func SetupRoutes(productController *product.ProductController, authController *a
 	mux.HandleFunc("POST /auth/register", authController.Register)
 	mux.HandleFunc("POST /auth/login", authController.Login)
 
+	mux.Handle(
+		"GET /auth/me",
+		middleware.JWTMiddleware(
+			middleware.RequireRole("admin")(
+				http.HandlerFunc(authController.Me),
+			),
+		),
+	)
+
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://localhost:4200"},
 		AllowedMethods: []string{

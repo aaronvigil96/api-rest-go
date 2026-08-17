@@ -9,3 +9,10 @@ type User struct {
 	Role          string
 	Created_At    time.Time
 }
+
+type UserResponse struct {
+	ID         int       `json:"id"`
+	Email      string    `json:"email"`
+	Role       string    `json:"role"`
+	Created_At time.Time `json:"created_at"`
+}

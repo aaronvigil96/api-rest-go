@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
+	"prueba/internal/requestcontext"
 )
 
 type AuthController struct {
@@ -57,4 +58,25 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"token": token,
 	})
+}
+
+func (c *AuthController) Me(w http.ResponseWriter, r *http.Request) {
+
+	userID, ok := requestcontext.GetUserID(r.Context())
+
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := c.service.GetCurrentUser(userID)
+
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(user)
 }

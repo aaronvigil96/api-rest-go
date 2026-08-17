@@ -59,3 +59,7 @@ func (s *AuthService) Login(loginDto LoginDTO) (string, error) {
 
 	return token, nil
 }
+
+func (s *AuthService) GetCurrentUser(id int) (UserResponse, error) {
+	return s.repository.GetCurrentUser(id)
+}

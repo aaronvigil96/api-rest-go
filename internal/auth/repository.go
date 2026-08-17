@@ -59,3 +59,26 @@ func (r *AuthRepository) FindByEmail(email string) (User, error) {
 
 	return user, nil
 }
+
+func (r *AuthRepository) GetCurrentUser(id int) (UserResponse, error) {
+	var user UserResponse
+
+	err := r.db.QueryRow(
+		context.Background(),
+		`SELECT id, email, role, created_at
+		 FROM users
+		 WHERE id = $1`,
+		id,
+	).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Role,
+		&user.Created_At,
+	)
+
+	if err != nil {
+		return UserResponse{}, err
+	}
+
+	return user, nil
+}
